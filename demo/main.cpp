@@ -14,28 +14,38 @@ Timer debounce;                  //define debounce timer
 Timer t0;
 
 Thread t;
-float ADCdata[200];
+float ADCdata[500];
 
 int flag = 0;
 int c = 1;
 int j = 0;
 int k = 0;
+int _wait = 0;
+int _slew = 0;
 
 void Freq_info() {
       uLCD.cls();
-      uLCD.printf("\n Frequency is:\n");
-      if (c == 0) {             // 100HZ
-            uLCD.printf("\n > 50Hz\n");
-            uLCD.printf("\n   100Hz\n");
-            uLCD.printf("\n   500Hz\n");
-      } else if (c == 1) {      // 200HZ
-            uLCD.printf("\n   50Hz\n");
-            uLCD.printf("\n > 100Hz\n");
-            uLCD.printf("\n   500Hz\n");
-      } else if (c == 2) {      // 1000HZ
-            uLCD.printf("\n   50Hz\n");
-            uLCD.printf("\n   100Hz\n");
-            uLCD.printf("\n > 500Hz\n");
+      uLCD.printf("\n Slew rate is:\n");
+      if (c == 0) {
+            uLCD.printf("\n   1\n");
+            uLCD.printf("\n   1/2\n");
+            uLCD.printf("\n   1/4\n");
+            uLCD.printf("\n > 1/8\n");
+      } else if (c == 1) {
+            uLCD.printf("\n   1\n");
+            uLCD.printf("\n   1/2\n");
+            uLCD.printf("\n > 1/4\n");
+            uLCD.printf("\n   1/8\n");
+      } else if (c == 2) {
+            uLCD.printf("\n   1\n");
+            uLCD.printf("\n > 1/2\n");
+            uLCD.printf("\n   1/4\n");
+            uLCD.printf("\n   1/8\n");
+      } else if (c == 3) {
+            uLCD.printf("\n > 1\n");
+            uLCD.printf("\n   1/2\n");
+            uLCD.printf("\n   1/4\n");
+            uLCD.printf("\n   1/8\n");
       }
 }
 
@@ -46,7 +56,7 @@ void Freq_confirm() {
 void Freq_up() {
       if (duration_cast<milliseconds>(debounce.elapsed_time()).count() > 500) {
             flag = 0;
-            if (c == 2) c = 0;
+            if (c == 3) c = 0;
             else c++;
             queue.call(Freq_info);
             debounce.reset(); //restart timer when the toggle is performed
@@ -56,7 +66,7 @@ void Freq_up() {
 void Freq_down() {
       if (duration_cast<milliseconds>(debounce.elapsed_time()).count() > 500) {
             flag = 0;
-            if (c == 0) c = 2;
+            if (c == 0) c = 3;
             else c--;
             queue.call(Freq_info);
             debounce.reset(); //restart timer when the toggle is performed
@@ -82,41 +92,36 @@ int main(void)
       confirm.rise(Freq_conf);
 
       while (1) {
-            if ((c == 0) && flag) {
-                  for (float i = 0.0f; i <= 0.9; i += 0.1f) {
+            if (c == 0) {
+                  _wait = 220000;
+                  _slew = 100;
+            } else if (c == 1) {
+                  _wait = 200000;
+                  _slew = 200;
+            } else if (c == 2) {
+                  _wait = 160000;
+                  _slew = 400;
+            } else if (c == 3) {
+                  _wait = 80000;
+                  _slew = 800;
+            }
+
+            if (flag) {
+                  for (float i = 0.0f; i < 0.9f; i += 0.009f) {
                         aout = i;
-                        wait_us(182);
+                        wait_us(_slew-15);
                         if (j == 201 || j == 202) ADCdata[k++] = Ain;
                   } 
-                  for (float i = 0.9; i > 0.0f; i -= 0.01f) {
+
+                  wait_us(_wait);
+
+                  for (float i = 0.9; i > 0.0f; i -= 0.009f) {
                         aout = i;
-                        wait_us(182);
-                        if (j == 201 || j == 202) ADCdata[k++] = Ain;                        
-                  }
-            } else if ((c == 1) && flag) {
-                  for (float i = 0.0f; i <= 0.9; i += 0.1f) {
-                        aout = i;
-                        wait_us(85);
-                        if (j == 201 || j == 202) ADCdata[k++] = Ain;
-                  } 
-                  for (float i = 0.9; i > 0.0f; i -= 0.01f) {
-                        aout = i;
-                        wait_us(85);
-                        if (j == 201 || j == 202) ADCdata[k++] = Ain;                        
-                  }
-            } else if ((c == 2) && flag) {
-                  for (float i = 0.0f; i <= 0.9; i += 0.1f) {
-                        aout = i;
-                        wait_us(5);
-                        if (j == 201 || j == 202) ADCdata[k++] = Ain;
-                  } 
-                  for (float i = 0.9; i > 0.0f; i -= 0.01f) {
-                        aout = i;
-                        wait_us(5);
+                        wait_us(_slew-15);
                         if (j == 201 || j == 202) ADCdata[k++] = Ain;                        
                   }
             }
-            if (j == 202 && flag) for (int k = 0; k < 200; k++) printf("%f\r\n", ADCdata[k]);
+            //if (j == 202 && flag) for (int k = 0; k < 200; k++) printf("%f\r\n", ADCdata[k]);
             j++;
       }
 }

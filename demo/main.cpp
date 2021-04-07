@@ -14,7 +14,7 @@ Timer debounce;                  //define debounce timer
 Timer t0;
 
 Thread t;
-float ADCdata[490];
+float ADCdata[484];
 
 int flag = 0;
 int c = 1;
@@ -125,7 +125,7 @@ int main(void)
                         if (j == 20 || j == 21) ADCdata[k++] = Ain;                        
                   }
             }
-            //if (j == 22 && flag) for (int k = 0; k < 480; k++) printf("%f\r\n", ADCdata[k]);
+            if (j == 22 && flag) for (int k = 0; k < 484; k++) printf("%f\r\n", ADCdata[k]);
             j++;
       }
 }

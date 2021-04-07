@@ -14,7 +14,7 @@ Timer debounce;                  //define debounce timer
 Timer t0;
 
 Thread t;
-float ADCdata[400];
+float ADCdata[490];
 
 int flag = 0;
 int c = 1;
@@ -92,36 +92,40 @@ int main(void)
       confirm.rise(Freq_conf);
 
       while (1) {
-            if (c == 0) {
-                  _wait = 220000;
-                  _slew = 100;
-            } else if (c == 1) {
-                  _wait = 200000;
-                  _slew = 200;
-            } else if (c == 2) {
-                  _wait = 160000;
-                  _slew = 400;
-            } else if (c == 3) {
-                  _wait = 80000;
-                  _slew = 800;
+            if (c == 0) {    // slew rate = 1/8
+                  _wait = 220;
+                  _slew = 10;
+            } else if (c == 1) {    // slew rate = 1/4
+                  _wait = 200;
+                  _slew = 20;
+            } else if (c == 2) {    // slew rate = 1/2
+                  _wait = 160;
+                  _slew = 40;
+            } else if (c == 3) {    // slew rate = 1
+                  _wait = 80;
+                  _slew = 80;
             }
 
             if (flag) {
-                  for (float i = 0.0f; i < 0.9f; i += 0.009f) {
+                  for (float i = 0.0f; i < 0.9f; i += 0.9f/_slew) {
                         aout = i;
-                        wait_us(_slew-15);
+                        wait_us(960);
                         if (j == 20 || j == 21) ADCdata[k++] = Ain;
                   } 
 
-                  wait_us(_wait);
+                  for (int i = 0; i < _wait; i++) {
+                        aout = 0.9;
+                        wait_us(970);
+                        if (j == 20 || j == 21) ADCdata[k++] = Ain;
+                  }
 
-                  for (float i = 0.9; i > 0.0f; i -= 0.009f) {
+                  for (float i = 0.9f; i > 0.0f; i -= 0.9f/_slew) {
                         aout = i;
-                        wait_us(_slew-15);
+                        wait_us(960);
                         if (j == 20 || j == 21) ADCdata[k++] = Ain;                        
                   }
             }
-            if (j == 22 && flag) for (int k = 0; k < 400; k++) printf("%f\r\n", ADCdata[k]);
+            //if (j == 22 && flag) for (int k = 0; k < 480; k++) printf("%f\r\n", ADCdata[k]);
             j++;
       }
 }
